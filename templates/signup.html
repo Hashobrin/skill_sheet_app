@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    {% include 'alert.html' %}
+    <form method="post" action="/signup">
+        {{ form.csrf_token }}
+        <label for="email">E-mail address: </label>
+        {{ form.email }}
+        <label for="password">password: </label>
+        {{ form.password }}
+        <label for="retype">Retype your password: </label>
+        {{ form.retype }}
+        {{ form.submit }}
+    </form>
+{% endblock %}
