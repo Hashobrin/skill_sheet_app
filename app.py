@@ -6,6 +6,7 @@ import flask
 from flask import (
     Flask, request, url_for, render_template, redirect, flash, session
 )
+from flask.views import View
 from flask_login import (
     LoginManager, UserMixin, login_user,
     login_required, logout_user, current_user
@@ -15,7 +16,10 @@ from sqlalchemy import (
     Column, Integer, String, DateTime, Date, Time, desc
 )
 import flask_wtf
-import wtforms
+from wtforms import (
+    IntegerField, StringField, PasswordField,
+    SubmitField, RadioField, SelectField
+)
 
 
 app = Flask(__name__)
@@ -41,26 +45,58 @@ class User(UserMixin, db.Model):
 
 db.create_all()
 
+
 class LoginForm(flask_wtf.FlaskForm):
-    email = wtforms.StringField('email')
-    password = wtforms.StringField('password')
-    submit = wtforms.SubmitField('submit')
+    email = StringField('email')
+    password = PasswordField('password')
+    submit = SubmitField('submit')
 
 
 class SignupForm(flask_wtf.FlaskForm):
-    email = wtforms.StringField('email')
-    password = wtforms.StringField('password')
-    retype = wtforms.StringField('retype')
-    submit = wtforms.SubmitField('submit')
+    email = StringField('email')
+    password = PasswordField('password')
+    retype = StringField('retype')
+    submit = SubmitField('submit')
+
+
+class EditProfileForm(flask_wtf.FlaskForm):
+    first_name = StringField('first_name')
+    last_name = StringField('last_name')
+    gender = RadioField(
+        label='gender',
+        choices=[('other', 'other'), ('male', 'male'), ('female', 'female')]
+    )
+    birth_year = SelectField(
+        label='birth_year',
+        choices=[(x, str(x)) for x in range(1900, datetime.now().year + 1)],
+        default = datetime.now().year+1,
+    )
+    birth_month = SelectField(
+        label='birth_month',
+        choices=[(str(y), str(y)) for y in range(1, 13)]
+    )
+    birth_date = SelectField(
+        label='birth_date',
+        choices=[(str(z), str(z)) for z in range(1, 32)]
+    )
+    submit = SubmitField('submit')
+
 
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
 
 
-@app.route('/sayhello')
-def sayhello():
-    return render_template('sayhello.html')
+class SayHelloView(View):
+    def __init__(self, template) -> None:
+        self.template = template
+
+    def dispatch_request(self):
+        return render_template('sayhello.html')
+
+
+app.add_url_rule(
+    '/sayhello', view_func=SayHelloView.as_view('say_hello', 'sayhello.html'))
 
 
 @app.errorhandler(404)
@@ -124,10 +160,10 @@ def signup():
     input_email = request.form.get('email')
     input_password = request.form.get('password')
     input_retype = request.form.get('retype')
-    user = User.query.filter_by(email=input_email).first()
+    user_exists = User.query.filter_by(email=input_email).first()
 
     if input_password == input_retype:
-        if user:
+        if user_exists:
             flash('This E-mail address is already exists.')
             return redirect(url_for('signup'))
         else:
@@ -141,9 +177,28 @@ def signup():
 
 
 @login_required
-@app.route('/mypage')
+@app.route('/mypage', methods=['get'])
 def mypage():
     return render_template('mypage.html')
+
+
+@login_required
+@app.route('/edit_profile', methods=['get'])
+def edit_profile_page():
+    return render_template('edit_profile.html', form=EditProfileForm())
+
+
+@login_required
+@app.route('/edit_profile', methods=['post'])
+def edit_profile():
+    user = User.query.get(current_user.id)
+    user.first_name = request.form.get('last_name')
+    user.last_name = request.form.get('first_name')
+    user.gender = request.form.get('gender')
+    db.session.merge(user)
+    db.session.commit()
+    flash('Updated your profile.')
+    return redirect(url_for('mypage'))
 
 
 if __name__ == '__main__':

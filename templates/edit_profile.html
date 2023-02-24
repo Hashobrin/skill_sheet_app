@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <h1>Edit your profile</h1>
+    <form method="post" action="/edit_profile">
+        {{ form.csrf_token }}
+        <label for="last_name">Last name: </label>
+        {{ form.last_name }}
+        <label for="first_name">First name: </label>
+        {{ form.first_name }}
+        <label for="gender">Gender: </label>
+        {{ form.gender }}
+        <label for="birthday">Birthday: </label>
+        {{ form.birth_year }} / {{ form.birth_month }} / {{ form.birth_date }}
+
+        <a href="{{ url_for('mypage') }}">Cancel</a>
+        {{ form.submit }}
+    </form>
+{% endblock %}

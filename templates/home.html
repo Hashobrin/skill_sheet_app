@@ -2,7 +2,18 @@
 
 {% block body %}
     <h2>Home</h2>
+    <table border="1">
+        <tr>
+            <th>E-mail</th>
+            <th>First-name</th>
+            <th>Last-name</th>
+        </tr>
     {% for user in users %}
-        <p>{{ user.email }}</p>
+        <tr>
+            <td>{{ user.email }}</td>
+            <th>{{ user.first_name }}</th>
+            <th>{{ user.last_name }}</th>
+        </tr>
     {% endfor %}
+    </table>
 {% endblock %}
