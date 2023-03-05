@@ -64,12 +64,12 @@ class EditProfileForm(flask_wtf.FlaskForm):
     last_name = StringField('last_name')
     gender = RadioField(
         label='gender',
-        choices=[('other', 'other'), ('male', 'male'), ('female', 'female')]
+        choices=[('other', 'other'), ('male', 'male'), ('female', 'female')],
+        default = 'other',
     )
     birth_year = SelectField(
         label='birth_year',
         choices=[(x, str(x)) for x in range(1900, datetime.now().year + 1)],
-        default = datetime.now().year+1,
     )
     birth_month = SelectField(
         label='birth_month',

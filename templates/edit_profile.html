@@ -5,13 +5,13 @@
     <form method="post" action="/edit_profile">
         {{ form.csrf_token }}
         <label for="last_name">Last name: </label>
-        {{ form.last_name }}
+        {{ form.last_name(value=current_user.last_name) }}
         <label for="first_name">First name: </label>
-        {{ form.first_name }}
+        {{ form.first_name(value=current_user.first_name) }}
         <label for="gender">Gender: </label>
-        {{ form.gender }}
+        {{ form.gender(value=current_user.gender) }}
         <label for="birthday">Birthday: </label>
-        {{ form.birth_year }} / {{ form.birth_month }} / {{ form.birth_date }}
+        {{ form.birth_year(value=current_user.birthday.year) }} / {{ form.birth_month(value=current_user.birthday.month) }} / {{ form.birth_date(value=current_user.birthday.date) }}
 
         <a href="{{ url_for('mypage') }}">Cancel</a>
         {{ form.submit }}
