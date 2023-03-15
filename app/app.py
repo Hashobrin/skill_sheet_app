@@ -34,13 +34,24 @@ db = SQLAlchemy(app)
 
 
 class User(UserMixin, db.Model):
-    id = db.Column(Integer, primary_key=True, nullable=False)
+    __tablename__ = 'users'
+
+    id = db.Column(Integer, primary_key=True)
     email = db.Column(String(255), unique=True, nullable=False)
     password = db.Column(String(255), nullable=False)
     first_name = db.Column(String(255))
     last_name = db.Column(String(255))
     gender = db.Column(String(255))
     birthday = db.Column(Date, default=date.today())
+    # skills = db.relationship('Skill', backref='users', lazy=True)
+
+
+class Skill(db.Model):
+    __tablename__ = 'skills'
+
+    id = db.Column(Integer, primary_key=True, nullable=False)
+    name = db.Column(String(255), nullable=False)
+    user_id = db.Column(Integer, db.ForeignKey('users.id'))
 
 
 db.create_all()
@@ -60,24 +71,28 @@ class SignupForm(flask_wtf.FlaskForm):
 
 
 class EditProfileForm(flask_wtf.FlaskForm):
-    first_name = StringField('first_name')
-    last_name = StringField('last_name')
+    first_name = StringField('First name')
+    last_name = StringField('Last name')
     gender = RadioField(
-        label='gender',
+        label='Gender',
         choices=[('other', 'other'), ('male', 'male'), ('female', 'female')],
-        default = 'other',
     )
     birth_year = SelectField(
-        label='birth_year',
+        label='Birth year',
         choices=[(x, str(x)) for x in range(1900, datetime.now().year + 1)],
     )
     birth_month = SelectField(
-        label='birth_month',
+        label='Birth month',
         choices=[(str(y), str(y)) for y in range(1, 13)]
     )
     birth_date = SelectField(
-        label='birth_date',
-        choices=[(str(z), str(z)) for z in range(1, 32)]
+        label='Birth date',
+        choices=[(z, str(z)) for z in range(1, 32)],
+        # default=5,
+    )
+    skill_name = SelectField(
+        label='Skill name',
+        choices=[],
     )
     submit = SubmitField('submit')
 
@@ -135,7 +150,7 @@ def login():
     input_password = request.form.get('password')
     user = User.query.filter_by(
         email=input_email, password=input_password).first()
-    
+
     if user:
         login_user(user)
         return redirect(url_for('home'))
@@ -185,16 +200,32 @@ def mypage():
 @login_required
 @app.route('/edit_profile', methods=['get'])
 def edit_profile_page():
-    return render_template('edit_profile.html', form=EditProfileForm())
+    user = User.query.get(current_user.id)
+    form = EditProfileForm(
+        request.form,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        gender=user.gender,
+        birth_year=user.birthday.year,
+        birth_month=user.birthday.month,
+        birth_date=user.birthday.day,
+        skill_name=Skill.query.filter_by(user_id=user.id)
+    )
+    return render_template('edit_profile.html', form=form)
 
 
 @login_required
 @app.route('/edit_profile', methods=['post'])
 def edit_profile():
     user = User.query.get(current_user.id)
-    user.first_name = request.form.get('last_name')
-    user.last_name = request.form.get('first_name')
+    user.first_name = request.form.get('first_name')
+    user.last_name = request.form.get('last_name')
     user.gender = request.form.get('gender')
+    birth_year = request.form.get('birth_year')
+    birth_month = request.form.get('birth_month')
+    birth_date = request.form.get('birth_date')
+    user.birthday = datetime.strptime(
+        f'{birth_year}-{birth_month}-{birth_date}', '%Y-%m-%d')
     db.session.merge(user)
     db.session.commit()
     flash('Updated your profile.')
