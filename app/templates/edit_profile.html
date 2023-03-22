@@ -2,25 +2,36 @@
 
 {% block body %}
     <h1>Edit your profile</h1>
-    <form method="post" action="/edit_profile">
+    <form method="post" action="{{ url_for('edit_profile') }}">
         {{ form.csrf_token }}
         {{ form.last_name.label }}:
-        {{ form.last_name() }}
+        {{ form.last_name() }}<br>
         {{ form.first_name.label }}:
-        {{ form.first_name() }}
+        {{ form.first_name() }}<br>
         {{ form.gender.label }}:
         {{ form.gender() }}
         <label for="birthday">Birthday: </label>
-        {{ form.birth_year() }} / {{ form.birth_month() }} / {{ form.birth_date() }}
+        {{ form.birth_year() }} /
+        {{ form.birth_month() }} /
+        {{ form.birth_date() }}<br>
 
-        {{ form.skill_name.label }}
-        <ul>
-        {% if skill_name %}
-        {% for skill in skill_name %}
-            <li>{{ form.skill_name() }}</li>
-        {{ endfor }}
+        <h2>Edit your skills</h2>
+        {% if skill_list == [] %}
+            <p>You have no skill yet...</p>
+        {% else %}
+            <ul>
+                {% for skill in skill_list %}
+                    <li>
+                        {{ skill.name }}
+                        <a href="{{ url_for('delete_skill', id=skill.id) }}">
+                            <button type="button">Delete</button>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
         {% endif %}
-        </ul>
+        <ul><li>{{ form.skill_name() }}<br></li></ul>
+    
         <a href="{{ url_for('mypage') }}">Cancel</a>
         {{ form.submit }}
     </form>

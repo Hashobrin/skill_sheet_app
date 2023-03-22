@@ -15,10 +15,10 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import (
     Column, Integer, String, DateTime, Date, Time, desc
 )
-import flask_wtf
+from flask_wtf import FlaskForm
 from wtforms import (
     IntegerField, StringField, PasswordField,
-    SubmitField, RadioField, SelectField
+    SubmitField, RadioField, SelectField, ValidationError,
 )
 
 
@@ -52,25 +52,27 @@ class Skill(db.Model):
     id = db.Column(Integer, primary_key=True, nullable=False)
     name = db.Column(String(255), nullable=False)
     user_id = db.Column(Integer, db.ForeignKey('users.id'))
+    start_date = db.Column(Date, default=date.today())
+    level = db.Column(Integer)
 
 
 db.create_all()
 
 
-class LoginForm(flask_wtf.FlaskForm):
+class LoginForm(FlaskForm):
     email = StringField('email')
     password = PasswordField('password')
-    submit = SubmitField('submit')
+    submit = SubmitField('Submit')
 
 
-class SignupForm(flask_wtf.FlaskForm):
+class SignupForm(FlaskForm):
     email = StringField('email')
     password = PasswordField('password')
-    retype = StringField('retype')
-    submit = SubmitField('submit')
+    retype = PasswordField('retype')
+    submit = SubmitField('Submit')
 
 
-class EditProfileForm(flask_wtf.FlaskForm):
+class EditProfileForm(FlaskForm):
     first_name = StringField('First name')
     last_name = StringField('Last name')
     gender = RadioField(
@@ -90,11 +92,29 @@ class EditProfileForm(flask_wtf.FlaskForm):
         choices=[(z, str(z)) for z in range(1, 32)],
         # default=5,
     )
-    skill_name = SelectField(
-        label='Skill name',
-        choices=[],
-    )
-    submit = SubmitField('submit')
+    submit = SubmitField('Submit')
+
+
+class EditMySkillForm(FlaskForm):
+    skill_name = StringField('Skill name')
+    submit = SubmitField('Submit')
+
+
+class ChangePassword(FlaskForm):
+    old_password = PasswordField('Password now you setting')
+    new_password = PasswordField('New password')
+    retype = PasswordField('Retype your new password')
+    submit = SubmitField('Submit')
+
+    def validate_new_password(self, new_password):
+        if new_password.data == '':
+            raise ValidationError('No input.')
+        
+        if len(new_password.data) < 8:
+            raise ValidationError('Password must be 8 charactors or more.')
+        
+        if new_password.data in ('/', '*', '\\'):
+            raise ValidationError('"/", "*" and "\\" are prohibited charactors.')
 
 
 @login_manager.user_loader
@@ -166,12 +186,12 @@ def logout():
 
 
 @app.route('/signup', methods=['get'])
-def signup_page():
+def signup_get():
     return render_template('signup.html', form=SignupForm())
 
 
 @app.route('/signup', methods=['post'])
-def signup():
+def signup_post():
     input_email = request.form.get('email')
     input_password = request.form.get('password')
     input_retype = request.form.get('retype')
@@ -193,15 +213,26 @@ def signup():
 
 @login_required
 @app.route('/mypage', methods=['get'])
-def mypage():
-    return render_template('mypage.html')
+def mypage_get():
+    user = User.query.get(current_user.id)
+    skill_list = Skill.query.filter_by(user_id=user.id).all()
+    return render_template('mypage.html', skill_list=skill_list)
+
+
+@login_required
+@app.route('/edit_my_skill', methods=['post'])
+def mypage_post():
+    skill = Skill(name=request.form.get('skill_name'), user_id=current_user.id)
+    db.session.add(skill)
+    db.session.commit()
+    return redirect(url_for('edit_profile'))
 
 
 @login_required
 @app.route('/edit_profile', methods=['get'])
-def edit_profile_page():
+def edit_profile_get():
     user = User.query.get(current_user.id)
-    form = EditProfileForm(
+    edit_profile_form = EditProfileForm(
         request.form,
         first_name=user.first_name,
         last_name=user.last_name,
@@ -209,14 +240,19 @@ def edit_profile_page():
         birth_year=user.birthday.year,
         birth_month=user.birthday.month,
         birth_date=user.birthday.day,
-        skill_name=Skill.query.filter_by(user_id=user.id)
     )
-    return render_template('edit_profile.html', form=form)
+    skill_list = Skill.query.filter_by(user_id=user.id).all()
+    
+    return render_template(
+        'edit_profile.html',
+        form=edit_profile_form,
+        skill_list=skill_list,
+    )
 
 
 @login_required
 @app.route('/edit_profile', methods=['post'])
-def edit_profile():
+def edit_profile_post():
     user = User.query.get(current_user.id)
     user.first_name = request.form.get('first_name')
     user.last_name = request.form.get('last_name')
@@ -226,10 +262,50 @@ def edit_profile():
     birth_date = request.form.get('birth_date')
     user.birthday = datetime.strptime(
         f'{birth_year}-{birth_month}-{birth_date}', '%Y-%m-%d')
+    
+    skill = Skill(name=request.form.get('skill_name'), user_id=current_user.id)
+ 
     db.session.merge(user)
+    db.session.add(skill)
     db.session.commit()
     flash('Updated your profile.')
     return redirect(url_for('mypage'))
+
+
+@login_required
+@app.route('/delete_skill/<int:id>', methods=['get'])
+def delete_skill(id):
+    skill = Skill.query.get(id)
+    db.session.delete(skill)
+    db.session.commit()
+    return redirect(url_for('edit_profile'))
+
+
+@login_required
+@app.route('/change_password', methods=['get'])
+def change_password_page():
+    return render_template('change_password.html', form=ChangePassword())
+
+
+@login_required
+@app.route('/change_password', methods=['post'])
+def change_password():
+    user = User.query.get(current_user.id)
+    form = ChangePassword()
+    old_password = request.form.get('old_password')
+    new_password = request.form.get('new_password')
+    retype = request.form.get('retype')
+
+    if form.validate_on_submit():
+        if old_password == user.password and new_password == retype:
+            user.password = request.form.get('new_password')
+            db.session.merge(user)
+            db.session.commit()
+            flash('Changed your password.')
+            return redirect(url_for('mypage'))
+
+    flash('Wrong password.')
+    return render_template('change_password.html', form=form)
 
 
 if __name__ == '__main__':
