@@ -2,7 +2,7 @@
 
 {% block body %}
     <h1>Edit your profile</h1>
-    <form method="post" action="{{ url_for('edit_profile') }}">
+    <form method="post" action="{{ url_for('edit_profile_get') }}">
         {{ form.csrf_token }}
         {{ form.last_name.label }}:
         {{ form.last_name() }}<br>
@@ -32,7 +32,7 @@
         {% endif %}
         <ul><li>{{ form.skill_name() }}<br></li></ul>
     
-        <a href="{{ url_for('mypage') }}">Cancel</a>
+        <a href="{{ url_for('mypage_get') }}">Cancel</a>
         {{ form.submit }}
     </form>
 {% endblock %}

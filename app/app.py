@@ -90,8 +90,8 @@ class EditProfileForm(FlaskForm):
     birth_date = SelectField(
         label='Birth date',
         choices=[(z, str(z)) for z in range(1, 32)],
-        # default=5,
     )
+    skill_name = StringField('skill_name')
     submit = SubmitField('Submit')
 
 

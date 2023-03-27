@@ -3,7 +3,7 @@
 </h1>
 {% if current_user.is_authenticated %}
     <p>
-        Welcome back, <a href="{{ url_for('mypage') }}">
+        Welcome back, <a href="{{ url_for('mypage_get') }}">
             {% if current_user.first_name %}
                 {{ current_user.first_name }}.
             {% else %}
@@ -15,5 +15,5 @@
 {% else %}
     <p>Welcome.</p>
     <a href="{{ url_for('login') }}">Login here.</a>
-    <a href="{{ url_for('signup') }}">Signup here.</a>
+    <a href="{{ url_for('signup_get') }}">Signup here.</a>
 {% endif %}
