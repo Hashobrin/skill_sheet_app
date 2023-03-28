@@ -4,7 +4,8 @@ from datetime import datetime, date, time
 
 import flask
 from flask import (
-    Flask, request, url_for, render_template, redirect, flash, session
+    Flask, request, url_for, render_template,
+    redirect, flash, session, send_from_directory,
 )
 from flask.views import View
 from flask_login import (
@@ -120,6 +121,15 @@ class ChangePassword(FlaskForm):
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(
+        os.path.join(app.root_path, 'static/images'),
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon',
+    )
 
 
 class SayHelloView(View):
