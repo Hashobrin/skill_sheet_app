@@ -57,9 +57,6 @@ class Skill(db.Model):
     level = db.Column(Integer)
 
 
-db.create_all()
-
-
 class LoginForm(FlaskForm):
     email = StringField('email')
     password = PasswordField('password')
@@ -117,6 +114,11 @@ class ChangePassword(FlaskForm):
         if new_password.data in ('/', '*', '\\'):
             raise ValidationError('"/", "*" and "\\" are prohibited charactors.')
 
+
+@app.before_first_request
+def init():
+    db.create_all()
+    
 
 @login_manager.user_loader
 def load_user(id):
