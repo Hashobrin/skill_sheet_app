@@ -11,6 +11,7 @@ WORKDIR /app
 #     && apt upgrade
 RUN apt update -y
 RUN apt install -y git
+# RUN apt install -y systemd
 RUN apt upgrade -y
 
 # RUN wget --no-check-certificate https://www.python.org/ftp/python/3.9.5/Python-3.9.5.tgz \
@@ -30,3 +31,10 @@ COPY requirements.txt /root/
 
 RUN pip3 install --upgrade pip \
     && pip3 install -r requirements.txt
+
+ENV FLASK_APP app/app.py
+ENV FLASK_RUN_PORT 80
+
+RUN flask db init
+RUN flask db migrate
+RUN flask db upgrade

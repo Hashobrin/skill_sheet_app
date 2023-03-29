@@ -7,6 +7,7 @@ from flask import (
     Flask, request, url_for, render_template,
     redirect, flash, session, send_from_directory,
 )
+from flask_migrate import Migrate
 from flask.views import View
 from flask_login import (
     LoginManager, UserMixin, login_user,
@@ -23,15 +24,21 @@ from wtforms import (
 )
 
 
+base_dir = os.path.dirname(__file__)
+
 app = Flask(__name__)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 
 app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+db_url = 'sqlite:///' + os.path.join(base_dir, 'db.sqlite')
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_NATIVE_UNICODE'] = 'utf-8'
 db = SQLAlchemy(app)
+db.init_app(app)
+migrate = Migrate(app, db)
 
 
 class User(UserMixin, db.Model):
@@ -47,6 +54,17 @@ class User(UserMixin, db.Model):
     # skills = db.relationship('Skill', backref='users', lazy=True)
 
 
+    def __init__(
+        self, email, password, first_name, last_name, gender, birthday
+    ):
+        self.email = email
+        self.password = password
+        self.first_name = first_name
+        self.last_name = last_name
+        self.gender = gender
+        self.birthday = birthday
+
+
 class Skill(db.Model):
     __tablename__ = 'skills'
 
@@ -55,6 +73,13 @@ class Skill(db.Model):
     user_id = db.Column(Integer, db.ForeignKey('users.id'))
     start_date = db.Column(Date, default=date.today())
     level = db.Column(Integer)
+
+
+    def __init__(self, name, user_id, start_date, level):
+        self.name = name
+        self.user_id = user_id
+        self.start_date = start_date
+        self.level = level
 
 
 class LoginForm(FlaskForm):
