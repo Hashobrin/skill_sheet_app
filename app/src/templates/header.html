@@ -3,7 +3,7 @@
 </h1>
 {% if current_user.is_authenticated %}
     <p>
-        Welcome back, <a href="{{ url_for('mypage_get') }}">
+        Welcome back, <a href="{{ url_for('mypage_get', id_=current_user.id) }}">
             {% if current_user.first_name %}
                 {{ current_user.first_name }}.
             {% else %}

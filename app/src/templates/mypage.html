@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    {% if user_data.first_name and user_data.last_name %}
+        <h1>{{ user_data.last_name }} {{ user_data.first_name }}</h1>
+    {% else %}
+        <h1>My page</h1>
+    {% endif %}
+    {% include 'alert.html' %}
+    {% if id_ == current_user.id %}
+        <a href="{{ url_for('edit_profile_get') }}">Edit your profile</a>
+        <a href="{{ url_for('change_password') }}">Change your password</a>
+    {% endif %}
+    <h2>Profile</h2>
+    <ul>
+        <li>E-mail: {{ user_data.email }}</li>
+        <li>Name: {{ user_data.last_name }} {{ user_data.first_name }}</li>
+        <li>Gender: {{ user_data.gender }}</li>
+        <li>Birthday: {{ user_data.birthday }}</li>
+    </ul>
+    <h2>Skills</h2>
+    {% if skill_list == [] %}
+        <p>Nothing...</p>
+    {% endif %}
+    <ul>
+        {% for skill in skill_list %}
+            <li>{{ skill.name }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

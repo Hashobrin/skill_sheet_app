@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <h2>Home</h2>
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Skills</th>
+        </tr>
+    {% for user in users %}
+        <tr>
+            <th>
+                <a href="{{ url_for('mypage_get', id_=user.id) }}">
+                    {{ user.first_name }} {{ user.last_name }}
+                </a>
+            </th>
+            <!-- <th>{{ user.skill }}</th> -->
+        </tr>
+    {% endfor %}
+    </table>
+{% endblock %}

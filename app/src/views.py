@@ -7,147 +7,16 @@ from flask import (
     Flask, request, url_for, render_template,
     redirect, flash, session, send_from_directory,
 )
-from flask_migrate import Migrate
 from flask.views import View
 from flask_login import (
     LoginManager, UserMixin, login_user,
     login_required, logout_user, current_user
 )
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import (
-    Column, Integer, String, DateTime, Date, Time, desc
-)
-from flask_wtf import FlaskForm
-from wtforms import (
-    IntegerField, StringField, PasswordField,
-    SubmitField, RadioField, SelectField, ValidationError,
-)
 
-
-base_dir = os.path.dirname(__file__)
-
-app = Flask(__name__)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-app.config['SECRET_KEY'] = 'secretkey'
-db_url = 'sqlite:///' + os.path.join(base_dir, 'db.sqlite')
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_NATIVE_UNICODE'] = 'utf-8'
-db = SQLAlchemy(app)
-db.init_app(app)
-migrate = Migrate(app, db)
-
-
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(Integer, primary_key=True)
-    email = db.Column(String(255), unique=True, nullable=False)
-    password = db.Column(String(255), nullable=False)
-    first_name = db.Column(String(255))
-    last_name = db.Column(String(255))
-    gender = db.Column(String(255))
-    birthday = db.Column(Date, default=date.today())
-    # skills = db.relationship('Skill', backref='users', lazy=True)
-
-
-    def __init__(
-        self, email, password, first_name, last_name, gender, birthday
-    ):
-        self.email = email
-        self.password = password
-        self.first_name = first_name
-        self.last_name = last_name
-        self.gender = gender
-        self.birthday = birthday
-
-
-class Skill(db.Model):
-    __tablename__ = 'skills'
-
-    id = db.Column(Integer, primary_key=True, nullable=False)
-    name = db.Column(String(255), nullable=False)
-    user_id = db.Column(Integer, db.ForeignKey('users.id'))
-    start_date = db.Column(Date, default=date.today())
-    level = db.Column(Integer)
-
-
-    def __init__(self, name, user_id, start_date, level):
-        self.name = name
-        self.user_id = user_id
-        self.start_date = start_date
-        self.level = level
-
-
-class LoginForm(FlaskForm):
-    email = StringField('email')
-    password = PasswordField('password')
-    submit = SubmitField('Submit')
-
-
-class SignupForm(FlaskForm):
-    email = StringField('email')
-    password = PasswordField('password')
-    retype = PasswordField('retype')
-    submit = SubmitField('Submit')
-
-
-class EditProfileForm(FlaskForm):
-    first_name = StringField('First name')
-    last_name = StringField('Last name')
-    gender = RadioField(
-        label='Gender',
-        choices=[('other', 'other'), ('male', 'male'), ('female', 'female')],
-    )
-    birth_year = SelectField(
-        label='Birth year',
-        choices=[(x, str(x)) for x in range(1900, datetime.now().year + 1)],
-    )
-    birth_month = SelectField(
-        label='Birth month',
-        choices=[(str(y), str(y)) for y in range(1, 13)]
-    )
-    birth_date = SelectField(
-        label='Birth date',
-        choices=[(z, str(z)) for z in range(1, 32)],
-    )
-    skill_name = StringField('skill_name')
-    submit = SubmitField('Submit')
-
-
-class EditMySkillForm(FlaskForm):
-    skill_name = StringField('Skill name')
-    submit = SubmitField('Submit')
-
-
-class ChangePassword(FlaskForm):
-    old_password = PasswordField('Password now you setting')
-    new_password = PasswordField('New password')
-    retype = PasswordField('Retype your new password')
-    submit = SubmitField('Submit')
-
-    def validate_new_password(self, new_password):
-        if new_password.data == '':
-            raise ValidationError('No input.')
-        
-        if len(new_password.data) < 8:
-            raise ValidationError('Password must be 8 charactors or more.')
-        
-        if new_password.data in ('/', '*', '\\'):
-            raise ValidationError('"/", "*" and "\\" are prohibited charactors.')
-
-
-@app.before_first_request
-def init():
-    db.create_all()
-    
-
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+from src import app, db
+from src.forms import (
+    LoginForm, SignupForm, EditProfileForm, EditMySkillForm, ChangePassword)
+from src.models import User, Skill
 
 
 @app.route('/favicon.ico')
@@ -168,7 +37,9 @@ class SayHelloView(View):
 
 
 app.add_url_rule(
-    '/sayhello', view_func=SayHelloView.as_view('say_hello', 'sayhello.html'))
+    '/sayhello',
+    view_func=SayHelloView.as_view('say_hello', 'sayhello.html')
+)
 
 
 @app.errorhandler(404)
@@ -239,7 +110,14 @@ def signup_post():
             flash('This E-mail address is already exists.')
             return redirect(url_for('signup'))
         else:
-            user = User(email=input_email, password=input_password)
+            user = User(
+                email=input_email,
+                password=input_password,
+                first_name=None,
+                last_name=None,
+                gender=None,
+                birthday=None,
+            )
             db.session.add(user)
             db.session.commit()
             return redirect(url_for('home'))
@@ -248,12 +126,12 @@ def signup_post():
         return redirect(url_for('signup'))
 
 
-@login_required
-@app.route('/mypage', methods=['get'])
-def mypage_get():
-    user = User.query.get(current_user.id)
+@app.route('/user/<int:id_>', methods=['get'])
+def mypage_get(id_):
+    user = User.query.get(id_)
     skill_list = Skill.query.filter_by(user_id=user.id).all()
-    return render_template('mypage.html', skill_list=skill_list)
+    return render_template(
+        'mypage.html', id_=id_, user_data = user, skill_list=skill_list)
 
 
 @login_required
@@ -344,6 +222,3 @@ def change_password():
     flash('Wrong password.')
     return render_template('change_password.html', form=form)
 
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True)

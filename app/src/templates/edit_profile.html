@@ -30,9 +30,12 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        <ul><li>{{ form.skill_name() }}<br></li></ul>
+        <ul>
+            <li>{{ form.skill_name() }}<br></li>
+            <li>{{ form.start_year() }} / {{ form.start_month() }}</li>
+        </ul>
     
-        <a href="{{ url_for('mypage_get') }}">Cancel</a>
+        <a href="{{ url_for('mypage_get', id_=current_user.id) }}">Cancel</a>
         {{ form.submit }}
     </form>
 {% endblock %}
