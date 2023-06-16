@@ -3,4 +3,5 @@ autopep8
 Flask
 flask-sqlalchemy
 flask-login
+flask-migrate
 Flask-WTF
