@@ -42,9 +42,8 @@ class Skill(db.Model):
     start_date = db.Column(Date, default=date.today())
 
 
-    def __init__(self, name, user_id, start_date, level):
+    def __init__(self, name, user_id, start_date):
         self.name = name
         self.user_id = user_id
         self.start_date = start_date
-        self.level = level
         

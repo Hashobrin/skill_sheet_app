@@ -11,9 +11,10 @@
         {{ form.gender.label }}:
         {{ form.gender() }}
         <label for="birthday">Birthday: </label>
-        {{ form.birth_year() }} /
+        <!-- {{ form.birth_year() }} /
         {{ form.birth_month() }} /
-        {{ form.birth_date() }}<br>
+        {{ form.birth_date() }}<br> -->
+        <input type="date" name="birthday" value="{{ user.birthday}}"><br>
 
         <h2>Edit your skills</h2>
         {% if skill_list == [] %}
@@ -31,8 +32,11 @@
             </ul>
         {% endif %}
         <ul>
-            <li>{{ form.skill_name() }}<br></li>
-            <li>{{ form.start_year() }} / {{ form.start_month() }}</li>
+            <li>{{ form.skill_name() }}<br>
+                <input type="date" name="start_date">
+                <!-- <input type="text" name="start_month" value="--"> -->
+                <!-- {{ form.start_year() }} / {{ form.start_month() }} -->
+            </li>
         </ul>
     
         <a href="{{ url_for('mypage_get', id_=current_user.id) }}">Cancel</a>

@@ -63,7 +63,8 @@ def delete_user(id):
 
 @app.route('/')
 def home():
-    users = User.query.all()
+    # users = User.query.all()
+    users = db.session.query(User, Skill).filter(User.id == Skill.user_id)
     return render_template('home.html', users=users)
 
 
@@ -149,19 +150,20 @@ def edit_profile_get():
     user = User.query.get(current_user.id)
     edit_profile_form = EditProfileForm(
         request.form,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        gender=user.gender,
-        birth_year=user.birthday.year,
-        birth_month=user.birthday.month,
-        birth_date=user.birthday.day,
+        first_name = user.first_name,
+        last_name = user.last_name,
+        gender = user.gender,
+        # birth_year = user.birthday.year,
+        # birth_month = user.birthday.month,
+        # birth_date = user.birthday.day,
     )
     skill_list = Skill.query.filter_by(user_id=user.id).all()
     
     return render_template(
         'edit_profile.html',
-        form=edit_profile_form,
-        skill_list=skill_list,
+        form = edit_profile_form,
+        user = user,
+        skill_list = skill_list,
     )
 
 
@@ -172,19 +174,32 @@ def edit_profile_post():
     user.first_name = request.form.get('first_name')
     user.last_name = request.form.get('last_name')
     user.gender = request.form.get('gender')
-    birth_year = request.form.get('birth_year')
-    birth_month = request.form.get('birth_month')
-    birth_date = request.form.get('birth_date')
-    user.birthday = datetime.strptime(
-        f'{birth_year}-{birth_month}-{birth_date}', '%Y-%m-%d')
-    
-    skill = Skill(name=request.form.get('skill_name'), user_id=current_user.id)
- 
+    # birth_year = request.form.get('birth_year')
+    # birth_month = request.form.get('birth_month')
+    # birth_date = request.form.get('birth_date')
+    # user.birthday = datetime.strptime(
+    #     f'{birth_year}-{birth_month}-{birth_date}', '%Y-%m-%d')
+    user.birthday = datetime.strptime(request.form.get('birthday'), '%Y-%m-%d')
     db.session.merge(user)
-    db.session.add(skill)
+    
+    skill_name = request.form.get('skill_name')
+    # start_year = request.form.get('start_year')
+    # start_month = request.form.get('start_month')
+    start_date = request.form.get('start_date')
+    print(type(skill_name), skill_name, type(start_date), start_date)
+    if skill_name.isdigit() and start_date.isdigit():
+        skill = Skill(
+            name = skill_name,
+            user_id = current_user.id,
+            # start_date = datetime.strptime(
+            #     f'{start_year}-{start_month}-1', '%Y-%m-%d'),
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        )
+        db.session.add(skill)
+
     db.session.commit()
     flash('Updated your profile.')
-    return redirect(url_for('mypage'))
+    return redirect(url_for('mypage_get', id_=current_user.id))
 
 
 @login_required
@@ -193,7 +208,7 @@ def delete_skill(id):
     skill = Skill.query.get(id)
     db.session.delete(skill)
     db.session.commit()
-    return redirect(url_for('edit_profile'))
+    return redirect(url_for('edit_profile_get'))
 
 
 @login_required

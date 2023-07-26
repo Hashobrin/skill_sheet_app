@@ -10,11 +10,12 @@
     {% for user in users %}
         <tr>
             <th>
-                <a href="{{ url_for('mypage_get', id_=user.id) }}">
-                    {{ user.first_name }} {{ user.last_name }}
+                <a href="{{ url_for('mypage_get', id_=user.User.id) }}">
+                    {{ user.User.first_name }} {{ user.User.last_name }}
                 </a>
             </th>
-            <!-- <th>{{ user.skill }}</th> -->
+            <th>{{ user.Skill.name }}</th>
+            <th>{{ user.Skill.start_date }}</th>
         </tr>
     {% endfor %}
     </table>

@@ -31,24 +31,37 @@ class EditProfileForm(FlaskForm):
     )
     birth_year = SelectField(
         label='Birth year',
-        choices=[(x, str(x)) for x in range(1900, datetime.now().year+1)],
+        choices = [
+            (birth_year_value, str(birth_year_value)) \
+            for birth_year_value in range(1900, datetime.now().year+1)
+        ],
     )
     birth_month = SelectField(
         label='Birth month',
-        choices=[(y, str(y)) for y in range(1, 13)],
+        choices = [
+            (birth_month_value, str(birth_month_value)) \
+            for birth_month_value in range(1, 13)],
     )
     birth_date = SelectField(
         label='Birth date',
-        choices=[(z, str(z)) for z in range(1, 32)],
+        choices = [
+            (birth_date_value, str(birth_date_value)) \
+            for birth_date_value in range(1, 32)],
     )
     skill_name = StringField('skill_name')
     start_year = SelectField(
         label='Start year',
-        choices=[(x, str(x)) for x in range(1900, datetime.now().year+1)],
+        choices = [
+            (start_year_value, str(start_year_value)) \
+            for start_year_value in range(1900, datetime.now().year+1)
+        ],
     )
     start_month = SelectField(
         label='Start month',
-        choices=[(y, str(y)) for y in range(1, 13)],
+        choices = [
+            (start_month_value, str(start_month_value)) \
+            for start_month_value in range(1, 13)
+        ],
     )
     submit = SubmitField('Submit')
 
